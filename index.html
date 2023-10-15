@@ -1,33 +1,79 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset='UTF-8'/>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'/>
-  <title>Document</title>
-  <script src='js/index.js'></script>
-  <link rel='stylesheet' href='index.css'/>
+  <title>GitHub User Search</title>
+  <link rel='stylesheet' href='index.css'>
 </head>
 <body>
   <div id='main'>
-
     <h2>GitHub Search</h2>
-
-    <form id='github-form'>
-      <input id='search' type='text' name='search'>
-      <input type='submit' name='submit'/>
+    <h1>GitHub User Search</h1>
+    <form id="searchForm">
+      <input type="text" id="searchInput" placeholder="Enter a GitHub username">
+      <button type="submit">Search</button>
     </form>
-
-    <div id='github-container'>
-      <ul id='user-list'>
-
-      </ul>
-
-      <ul id='repos-list'>
-
-      </ul>
+    <div id="results">
+      <ul id="user-list"></ul>
+      <ul id="repos-list"></ul>
     </div>
-
   </div>
+  
+  <script src='js/index.js'></script>
+  <script>
+    document.getElementById("searchForm").addEventListener("submit", function (e) {
+      e.preventDefault(); 
+      const searchInput = document.getElementById("searchInput").value;
+      searchGitHubUsers(searchInput);
+    });
 
+    async function searchGitHubUsers(username) {
+      const userApiUrl = `https://api.github.com/users/${username}`;
+      const reposApiUrl = `https://api.github.com/users/${username}/repos`;
+
+      try {
+        // Fetch user data
+        const userResponse = await fetch(userApiUrl);
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          displayUserInfo(userData);
+
+          // Fetch user repositories
+          const reposResponse = await fetch(reposApiUrl);
+          if (reposResponse.ok) {
+            const reposData = await reposResponse.json();
+            displayUserRepos(reposData);
+          } else {
+            console.error("Failed to fetch user repositories");
+          }
+        } else {
+          console.error("Failed to fetch user data");
+        }
+      } catch (error) {
+        console.error("An error occurred:", error);
+      }
+    }
+
+    function displayUserInfo(user) {
+      const userList = document.getElementById("user-list");
+      userList.innerHTML = `<li><img src="${user.avatar_url}" alt="${user.login}" /><a href="${user.html_url}" target="_blank">${user.login}</a></li>`;
+    }
+
+    function displayUserRepos(repos) {
+      const reposList = document.getElementById("repos-list");
+      reposList.innerHTML = "";
+      if (repos.length > 0) {
+        repos.forEach(repo => {
+          const listItem = document.createElement("li");
+          listItem.innerHTML = `<a href="${repo.html_url}" target="_blank">${repo.name}</a>`;
+          reposList.appendChild(listItem);
+        });
+      } else {
+        reposList.innerHTML = "No repositories found.";
+      }
+    }
+  </script>
 </body>
 </html>
